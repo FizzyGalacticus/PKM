@@ -11,6 +11,9 @@ using std::endl;
 #include <vector>
 using std::vector;
 
+#include <string>
+using std::string;
+
 #include <cstdint>
 
 typedef uint8_t  CHAR;
@@ -24,51 +27,68 @@ typedef int32_t LONG;
 typedef LONG INT;
 typedef INT BOOL;
 
-int main(const int argc, const char * argv[])
+const vector<char> getBinaryData(const string & filename)
 {
 	std::ifstream in;
 	vector<char> binData;
+	
+	in.open(filename.c_str(), ifstream::in|ifstream::binary);
+		
+	if(in)
+	{
+		char tempChar;
+		
+		while(!in.eof())
+		{
+			in.read(&tempChar, sizeof(tempChar));
+			binData.push_back(tempChar);
+		}
+		in.close();
+	}
+	else cout << "Failed to open " << filename << " for reading." << endl;
+	
+	return binData;
+}
+
+const int getCheckSum(const vector<char> & binData)
+{
 	vector<WORD> checksumWords;
+	int checksum = 0;
+	
+	bool firstHalfIsInitialized = false;
+	WORD myWord = 0;
+	for(int i = 0x08; i < 0x87; i++)
+	{
+		if(firstHalfIsInitialized)
+		{
+			myWord += binData[i];
+			checksumWords.push_back(myWord);
+			myWord = 0;
+			firstHalfIsInitialized = false;
+		}
+		else
+		{
+			myWord = binData[i];
+			myWord << 8;
+			firstHalfIsInitialized = true;
+		}
+	}
+	
+	for(int i = 0; i < checksumWords.size(); i++)
+		checksum += checksumWords[i];
+	
+	return checksum;
+}
+
+int main(const int argc, const char * argv[])
+{
+	vector<char> binData;
 	int checksum = 0;
 	
 	if(argc > 1)
 	{
-		in.open(argv[1], ifstream::in|ifstream::binary);
-		
-		if(in)
-		{
-			char tempChar;
-			
-			while(!in.eof())
-			{
-				in.read(&tempChar, sizeof(tempChar));
-				binData.push_back(tempChar);
-			}
-			in.close();
-			
-			bool firstHalfIsInitialized = false;
-			WORD myWord = 0;
-			for(int i = 0x08; i < 0x87; i++)
-			{
-				if(firstHalfIsInitialized)
-				{
-					myWord += binData[i];
-					checksumWords.push_back(myWord);
-					myWord = 0;
-					firstHalfIsInitialized = false;
-				}
-				else
-				{
-					myWord = binData[i];
-					myWord << 8;
-					firstHalfIsInitialized = true;
-				}
-			}
-			
-			for(int i = 0; i < checksumWords.size(); i++)
-				checksum += checksumWords[i];
-		}
-		else cout << "Failed to open " << argv[1] << " for reading." << endl;
+		binData = getBinaryData(argv[1]);
+		checksum = getCheckSum(binData);
 		
 		cout << argv[1] << " is " << binData.size() << " bytes!" << endl;
 		cout << "Checksum is " << checksum << "!" << endl;
