@@ -50,6 +50,20 @@ const vector<char> getBinaryData(const string & filename)
 	return binData;
 }
 
+const WORD getPersonalityValue(const vector<char> & binData)
+{
+	WORD personalityValue = 0;
+	
+	if(binData.size())
+	{
+		personalityValue += binData[0];
+		personalityValue = (personalityValue << 8);
+		personalityValue += binData[1];
+	}
+	
+	return personalityValue;
+}
+
 const int getCheckSum(const vector<char> & binData)
 {
 	vector<WORD> checksumWords;
@@ -57,7 +71,7 @@ const int getCheckSum(const vector<char> & binData)
 	
 	bool firstHalfIsInitialized = false;
 	WORD myWord = 0;
-	for(int i = 0x08; i < 0x87; i++)
+	for(int i = 0x08; i < 0x87 && i < binData.size(); i++)
 	{
 		if(firstHalfIsInitialized)
 		{
@@ -69,7 +83,7 @@ const int getCheckSum(const vector<char> & binData)
 		else
 		{
 			myWord = binData[i];
-			myWord << 8;
+			myWord = (myWord << 8);
 			firstHalfIsInitialized = true;
 		}
 	}
@@ -88,10 +102,12 @@ int main(const int argc, const char * argv[])
 	if(argc > 1)
 	{
 		binData = getBinaryData(argv[1]);
+		WORD personalityValue = getPersonalityValue(binData);
 		checksum = getCheckSum(binData);
 		
 		cout << argv[1] << " is " << binData.size() << " bytes!" << endl;
-		cout << "Checksum is " << checksum << "!" << endl;
+		cout << "Personality Value: " << personalityValue << endl;
+		cout << "Checksum: " << checksum << endl;
 	}
 	
 	return 0;
