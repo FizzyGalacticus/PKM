@@ -17,6 +17,8 @@ using std::string;
 #include <map>
 using std::map;
 
+#include <stdlib.h>
+
 #include <cstdint>
 
 typedef uint8_t  CHAR;
@@ -73,11 +75,19 @@ const WORD getPersonalityValue(const vector<char> & binData)
 	return personalityValue;
 }
 
-const int getCheckSum(const vector<char> & binData)
+const int getCheckSum(const vector<WORD> & checksumWords)
 {
-	vector<WORD> checksumWords;
 	int checksum = 0;
 	
+	for(int i = 0; i < checksumWords.size(); i++)
+		checksum += checksumWords[i];
+	
+	return checksum;
+}
+
+const vector<WORD> getEncryptedDataWords(const vector<char> & binData)
+{
+	vector<WORD> encryptedWords;
 	bool firstHalfIsInitialized = false;
 	WORD myWord = 0;
 	for(int i = 0x08; i < 0x87 && i < binData.size(); i++)
@@ -85,7 +95,7 @@ const int getCheckSum(const vector<char> & binData)
 		if(firstHalfIsInitialized)
 		{
 			myWord += binData[i];
-			checksumWords.push_back(myWord);
+			encryptedWords.push_back(myWord);
 			myWord = 0;
 			firstHalfIsInitialized = false;
 		}
@@ -97,16 +107,14 @@ const int getCheckSum(const vector<char> & binData)
 		}
 	}
 	
-	for(int i = 0; i < checksumWords.size(); i++)
-		checksum += checksumWords[i];
-	
-	return checksum;
+	return encryptedWords;
 }
 
 int main(const int argc, const char * argv[])
 {
 	vector<char> binData;
 	int checksum = 0;
+	srand(checksum);
 	
 	if(argc > 1)
 	{
