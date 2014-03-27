@@ -32,11 +32,11 @@ typedef int32_t LONG;
 typedef LONG INT;
 typedef INT BOOL;
 
-map<int, string> blockOrder = 	{{0, "ABCD"}, {1, "ABDC"}, {2, "ACBD"}, {3, "ACDB"}, {4, "ADBC"}, 
-										{5, "ADCB"}, {6, "BACD"}, {7, "BADC"}, {8, "BCAD"}, {9, "BCDA"},
-										{10, "BDAC"}, {11, "BDCA"}, {12, "CABD"}, {13, "CADB"}, {14, "CBAD"}, 
-										{15, "CBDA"}, {16, "CDAB"}, {17, "CDBA"}, {18, "DABC"}, {19, "DACB"},
-										{20, "DBAC"}, {21, "DBCA"}, {22, "DCAB"}, {23, "DCBA"}};
+map<int, string> blockOrder = 	{{0, "ABCD"}, {1, "ABDC"}, {2, "ACBD"}, {3, "ADBC"}, {4, "ACDB"}, 
+										{5, "ADCB"}, {6, "BACD"}, {7, "BADC"}, {8, "CABD"}, {9, "DABC"},
+										{10, "CADB"}, {11, "DACB"}, {12, "BCAD"}, {13, "BDAC"}, {14, "CBAD"}, 
+										{15, "DBAC"}, {16, "CDAB"}, {17, "DCAB"}, {18, "BCDA"}, {19, "BDCA"},
+										{20, "CBDA"}, {21, "DBCA"}, {22, "CDBA"}, {23, "DCBA"}};
 
 const vector<char> getBinaryData(const string & filename)
 {
@@ -61,14 +61,14 @@ const vector<char> getBinaryData(const string & filename)
 	return binData;
 }
 
-const DWORD getPersonalityValue(const vector<char> & binData)
+const WORD getPersonalityValue(const vector<char> & binData)
 {
-	DWORD personalityValue = 0;
+	WORD personalityValue = 0;
 	
 	if(binData.size())
 	{
 		personalityValue += binData[0];
-		personalityValue = (personalityValue << sizeof(WORD));
+		personalityValue = (personalityValue << 8);
 		personalityValue += binData[1];
 	}
 	
@@ -115,7 +115,12 @@ const vector<WORD> decryptDataWords(const vector<WORD> encryptedDataWords)
 	vector<WORD> decryptedDataWords;
 	
 	for(auto word : encryptedDataWords)
-		decryptedDataWords.push_back(word xor rand());
+	{
+		WORD temp = word xor rand();
+		//Switch to little-endian format?
+		WORD newWord = ((temp << 8) & (temp >> 8));
+		decryptedDataWords.push_back(newWord);
+	}
 	
 	return decryptedDataWords;
 }
@@ -130,6 +135,7 @@ const vector<char> shuffleBlocks(const vector<WORD> & decryptedDataWords, int sh
 	for(int i = 0; i < 16; i++)
 		A.push_back(decryptedDataWords[i]);
 	
+	//next 32, etc
 	for(int i = 16; i < 32; i++)
 		B.push_back(decryptedDataWords[i]);
 	
@@ -139,6 +145,7 @@ const vector<char> shuffleBlocks(const vector<WORD> & decryptedDataWords, int sh
 	for(int i = 48; i < 64; i++)
 		D.push_back(decryptedDataWords[i]);
 	
+	//Put in correct order
 	for(auto letter : blockOrderString)
 	{
 		if(letter == 'A')
@@ -184,8 +191,8 @@ int main(const int argc, const char * argv[])
 	if(argc > 1)
 	{
 		binData = getBinaryData(argv[1]);
-		const DWORD personalityValue = getPersonalityValue(binData);
-		int shiftValue = ((personalityValue >> 0xD) & 0x1F) % 24;
+		const WORD personalityValue = getPersonalityValue(binData);
+		int shiftValue = ((personalityValue & 0x3E000) >> 0xD) % 24;
 		const vector<WORD> encryptedDataWords = getEncryptedDataWords(binData),
 			decryptedDataWords = decryptDataWords(encryptedDataWords);
 		const int checksum = getCheckSum(encryptedDataWords);
@@ -195,6 +202,8 @@ int main(const int argc, const char * argv[])
 		
 		cout << argv[1] << " is " << binData.size() << " bytes!" << endl;
 		cout << "Personality Value: " << personalityValue << endl;
+		cout << "Shift Value: " << shiftValue << endl;
+		cout << "Shift Order: '" << blockOrder[shiftValue] << "'" << endl;
 		cout << "Checksum: " << checksum << endl;
 		cout << "Size of pure data (bytes): " << trueData.size() << endl;
 		cout << "Pokemon name: ";
