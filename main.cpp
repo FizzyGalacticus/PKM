@@ -14,6 +14,9 @@ using std::vector;
 #include <string>
 using std::string;
 
+#include <map>
+using std::map;
+
 #include <cstdint>
 
 typedef uint8_t  CHAR;
@@ -26,6 +29,12 @@ typedef int32_t LONG;
 
 typedef LONG INT;
 typedef INT BOOL;
+
+const map<int, string> blockOrder = {{0, "ABCD"}, {1, "ABDC"}, {2, "ACBD"}, {3, "ACDB"}, {4, "ADBC"}, 
+									{5, "ADCB"}, {6, "BACD"}, {7, "BADC"}, {8, "BCAD"}, {9, "BCDA"},
+									{10, "BDAC"}, {11, "BDCA"}, {12, "CABD"}, {13, "CADB"}, {14, "CBAD"}, 
+									{15, "CBDA"}, {16, "CDAB"}, {17, "CDBA"}, {18, "DABC"}, {19, "DACB"},
+									{20, "DBAC"}, {21, "DBCA"}, {22, "DCAB"}, {23, "DCBA"}};
 
 const vector<char> getBinaryData(const string & filename)
 {
