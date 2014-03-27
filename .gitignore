@@ -11,3 +11,7 @@
 *.lai
 *.la
 *.a
+
+# Helpful scripts and compiled executables
+*.sh
+*.out
