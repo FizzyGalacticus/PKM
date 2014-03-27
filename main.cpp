@@ -113,14 +113,15 @@ const vector<WORD> getEncryptedDataWords(const vector<char> & binData)
 int main(const int argc, const char * argv[])
 {
 	vector<char> binData;
-	int checksum = 0;
-	srand(checksum);
 	
 	if(argc > 1)
 	{
 		binData = getBinaryData(argv[1]);
-		WORD personalityValue = getPersonalityValue(binData);
-		checksum = getCheckSum(binData);
+		const WORD personalityValue = getPersonalityValue(binData);
+		const vector<WORD> encryptedDataWords = getEncryptedDataWords(binData);
+		const int checksum = getCheckSum(encryptedDataWords);
+		
+		srand(checksum);
 		
 		cout << argv[1] << " is " << binData.size() << " bytes!" << endl;
 		cout << "Personality Value: " << personalityValue << endl;
